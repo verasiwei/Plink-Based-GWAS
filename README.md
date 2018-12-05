@@ -25,8 +25,8 @@ Notice: If IDs are not matched in genotype and phenotype data,you should provide
 
 Notice: it may takes a long time if you want to impute the whole chromosomes, all chromosomes are separated into more than 500 chunks totally with each chunk 5MB according to the physical position, also you need to have enough storage to save the outputs!!!
 
-![Alt text](https://github.com/tbilab/GWAS_Annotation_Visualization/blob/master/result/manhattan_jak2_4covs.png)
-![Alt text](https://github.com/tbilab/GWAS_Annotation_Visualization/blob/master/result/qqplot_jak2.png)
+![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
+![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)
 
 
 
