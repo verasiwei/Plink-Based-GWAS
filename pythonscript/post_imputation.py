@@ -17,10 +17,14 @@ SNPcallrate = config.get_SNPcallrate()
 maf = config.get_maf()
 hwe = config.get_hwe()
 
+os.system("module load GCC/6.4.0-2.28  OpenMPI/2.1.1 R/3.4.3")
+os.system("module load GCC/6.4.0-2.28 Python/3.6.3")
+os.system("R --version")
+os.system("python --version")
+
 
 def postimputation():
     # combine all chunks in each chromosome
-    os.system("module load GCC/5.4.0-2.26  OpenMPI/1.10.3 R")
     os.system("Rscript %spostimputation.R %s %s %s %s %s" % (rscript, inputfile, resultdir, impute2, reference, refdir))
     account = input("Please input the account: ")
     mail = input("Please input the mail: ")
@@ -28,6 +32,7 @@ def postimputation():
     time = input("Please input time: ")
     memory = input("Please input memory: ")
     for chr in range(1, 23):
+        print(chr)
         phasedfile = "cleantotaldata_extractqc.chr%s.phased" % (chr)
         dir = str(inputfile)
         filename = "combinechr_TASK_%s.slurm" % chr
@@ -38,13 +43,15 @@ def postimputation():
         combinechrlist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]
         combinechr.writelines(combinechrlist1)
         combinechr.writelines(combinechrlist2)
-        maxposition = os.popen("gawk -v chr=%s 'FNR==chr {print}' %smaxposition" % (chr, inputfile))
-        maxposition = "%d" % maxposition + 1
-        combinechrlist3 = ["for chunk in `seq 1 %s`;do\n" % maxposition]
+        maxposition = open("%smaxposition" % (inputfile))
+        maxposition_chr = maxposition.readlines()[chr-1]
+        maxposition_chr = maxposition_chr.strip("\n")
+        combinechrlist3 = ["for chunk in `seq 1 %s`;do\n" % maxposition_chr]
         combinechrlist4 = ["cat %simpute2/chr%s/%s.chunk${chunk}.impute2 >> %simpute2/chr%s_chunkall.gen;done" % (resultdir, chr, phasedfile, resultdir, chr)]
         combinechr.writelines(combinechrlist3)
         combinechr.writelines(combinechrlist4)
         combinechr.close()
+
     # after combining all chunks together for each chromosome, convert them to the plink format data files, SNPs with uncertainty greater than 0.2 are treated as missing
     for chr in range(1, 23):
         dir2 = str(inputfile)
@@ -56,40 +63,62 @@ def postimputation():
         chrplinklist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]
         chrplink.writelines(chrplinklist1)
         chrplink.writelines(chrplinklist2)
-        chrplinklist3 = ["plink --data -gen %simpute2/chr%s_chunkall.gen " % (resultdir, chr),  "--sample %sshapeit/cleantotaldata_extractqc.chr%s.phased.sample " % (resultdir, chr), "--hard-call-threshold 0.2 --oxford-single-chr %s " % (chr)]
+        chrplinklist3 = [str(plink), " --data -gen %simpute2/chr%s_chunkall.gen " % (resultdir, chr),  "--sample %sshapeit/cleantotaldata_extractqc.chr%s.phased.sample " % (resultdir, chr), "--hard-call-threshold 0.2 --oxford-single-chr %s " % (chr)]
         chrplinklist4 = ["--make-bed --out %simpute2/chr%s_chunkall" % (resultdir, chr)]
         chrplink.writelines(chrplinklist3)
         chrplink.writelines(chrplinklist4)
         chrplink.close()
+
     # after converting into plink format, merge all chromosomes together
     dir3 = str(inputfile)
-    filename3 = "combinechrplink.tzt"
+    filename3 = "combinechrplink.txt"
     filename3 = "%s%s" % (dir3, filename3)
     combinechrplink = open(filename3, "a")
-    for chr in range(1, 23):
+    for chr in range(2, 23):
         combinechrplinklist = ["%simpute2/chr%s_chunkall.bed %simpute2/chr%s_chunkall.bim %simpute2/chr%s_chunkall.fam\n" % (resultdir, chr, resultdir, chr, resultdir, chr)]
         combinechrplink.writelines(combinechrplinklist)
-    os.system("plink --bfile %simpute2/chr1_chunkall --merge-list %sall_chromosomes.txt --make-bed --out %simpute2/allchr" % (resultdir, inputfile, resultdir))
+    os.system(str(plink) + " --bfile %simpute2/chr1_chunkall --merge-list %scombinechrplink.txt --make-bed --out %simpute2/allchr" % (resultdir, inputfile, resultdir))
+
     # remove SNPs with 3+ alleles, detect which chromosome these SNPs on
-    # after getting one plink format file, exclude snps with certainty for best guess <0.9
-    # firstly get a list of excluded snps for chromosome
-    for chr in range(1, 23):
-        maxposition = os.popen("gawk -v chr=%s 'FNR==chr {print}' %smaxposition" % (chr, inputfile))
-        maxposition = "%d" % maxposition + 1
-        for chunk in range(1, maxposition):
-            os.system("gawk '$8 < 0.9 {print $2}' %simpute2/chr%s/cleantotaldata_extractqc.chr%s.phased.chunk%s.impute2_info >> %sexcludesnps.txt" % (resultdir, chr, chr, chunk, inputfile))
+    os.system("%s --bfile %simpute2/chr17_chunkall --exclude %simpute2/allchr-merge.missnp --make-bed --out %simpute2/allchr" % (plink, resultdir, inputfile, resultdir))
+    os.system("%s --bfile %simpute2/chr1_chunkall --merge-list %scombinechrplink.txt --make-bed --out %simpute2/allchr" % (plink, resultdir, inputfile, resultdir))
 
 
 def postimputation2():
     # remove SNPs with duplicate positions
-    os.system("plink --bfile %simpute2/allchr --noweb --list-duplicate-vars ids-only suppress-first --out %sduplicatesnps_allchr" % (resultdir, inputfile))
-    os.system("plink --bfile %simpute2/allchr --noweb --exclude %sduplicatesnps_allchr.dupvar --make-bed --out %simpute2/allchr2" % (resultdir, inputfile, resultdir))
+    os.system("%s --bfile %simpute2/allchr --noweb --list-duplicate-vars ids-only suppress-first --out %sduplicatesnps_allchr" % (plink, resultdir, inputfile))
+    os.system("%s --bfile %simpute2/allchr --noweb --exclude %sduplicatesnps_allchr.dupvar --make-bed --out %simpute2/allchr2" % (plink, resultdir, inputfile, resultdir))
     # exclude snps with certainty for best guess < 0.9
-    os.system("plink --bfile %simpute2/allchr2 --exclude %sexcludesnps.txt --make-bed --out %simpute2/cleanchr" % (resultdir, inputfile, resultdir))
+    # after getting one plink format file, exclude snps with certainty for best guess <0.9
+    # firstly get a list of excluded snps for chromosome
+    for chr in range(1, 23):
+        maxposition = open("%smaxposition" % (inputfile))
+        maxposition_chr = maxposition.readlines()[chr-1]
+        maxposition_chr = maxposition_chr.strip("\n")
+        for chunk in range(1, maxposition_chr):
+            os.system("gawk '$8 < 0.9 {print $2}' %simpute2/chr%s/cleantotaldata_extractqc.chr%s.phased.chunk%s.impute2_info >> %sexcludesnps.txt" % (resultdir, chr, chr, chunk, inputfile))
+    os.system("%s --bfile %simpute2/allchr2 --exclude %sexcludesnps.txt --make-bed --out %simpute2/cleanchr" % (plink, resultdir, inputfile, resultdir))
     # do the post imputation quality control
-    os.system("plink --bfile %simpute2/cleanchr --noweb --geno %s --maf %s --hwe %s --make-bed --out %simpute2/cleanchr_qc" % (resultdir, SNPcallrate, maf, hwe, resultdir))
+    os.system("%s --bfile %simpute2/cleanchr --noweb --geno %s --maf %s --hwe %s --make-bed --out %simpute2/cleanchr_qc" % (plink, resultdir, SNPcallrate, maf, hwe, resultdir))
+
+
+def unilog():
+    # you should change the column of phenotype in the .fam file and provide a file of "mycovpca" which includes the adjusted covariates like age, sex and PCs by yourself
+    # do the logistic regression
+    os.system("%s --bfile %simpute2/cleanchr_qc --noweb --logistic hide-covar --ci 0.95 --covar %smycovpca.txt --out %sunilogassoc" % (plink, resultdir, inputfile, resultdir))
+    # extract significant snps from the results
+    os.system("gawk '$12!=\"" + "NA" + "\" " + "&& $12<=0.000005 || NR==1 {print}' %sunilogassoc.assoc.logistic > %sunilog_covs" % (resultdir, resultdir))
+    # manhattan plot and significant snps csv file
+    os.system("Rscript %sunilogassoc.R %s" % (rscript, resultdir))
 
 
 postimputation()
+for chr in range(1, 23):
+        os.system("sbatch " + str(inputfile) + "combinechr_TASK_%s.slurm" % chr)
+for chr in range(1, 23):
+        os.system("sbatch " + str(inputfile) + "chrplink_TASK_%s.slurm" % chr)
 postimputation2()
+
+
+
 

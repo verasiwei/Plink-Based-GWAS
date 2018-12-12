@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import subprocess
+# import subprocess
 # import argparse
 import config
 
@@ -14,6 +14,7 @@ reference = config.get_reference()
 output = config.get_output()
 refdir = config.get_refdir()
 impute2 = config.get_impute2()
+shapeit = config.get_shapeit()
 
 os.system("module load GCC/6.4.0-2.28  OpenMPI/2.1.1 R/3.4.3")
 os.system("module load GCC/6.4.0-2.28 Python/3.6.3")
@@ -53,18 +54,29 @@ def preimpute():
 
 
 def preshapeit():
-    # split 22 chromosomes
-    os.system("for chr in `seq 1 22`; do plink --bfile " + str(inputfile) + " cleantotaldata_extractqc --chr $chr --make-bed --out " + str(output) + "cleantotaldata_extractqc.chr$chr; done")
-    # alignment of the SNPs between the target set and reference set
-    aligncmd1 = "for chr in `seq 1 22`; do "
-    aligncmd2 = "shapeit -check -B " + str(output) + "cleantotaldata_extractqc.chr${chr} -M " + str(reference) + str(refdir) + "genetic_map_chr${chr}_combined_b37.txt --input-ref "
-    aligncmd3 = str(reference) + str(refdir) + "ALL_1000G_phase1integrated_v3_chr${chr}_impute.hap.gz " + str(reference) + str(refdir) + "ALL_1000G_phase1integrated_v3_chr${chr}_impute.legend.gz "
-    aligncmd4 = str(reference) + str(refdir) + "ALL_1000G_phase1integrated_v3.sample --output-log " + str(output) + "chr${chr}.alignment;done"
-    align = aligncmd1 + aligncmd2 + aligncmd3 + aligncmd4
-    subprocess.call(align, shell=True)
+        # split 22 chromosomes
+        # os.system("for chr in `seq 1 22`; do " + str(plink) + " --noweb --bfile " + str(inputfile) + "cleantotaldata_extractqc --chr $chr --make-bed --out " + str(output) + "cleantotaldata_extractqc.chr$chr; done")
+        os.system("chmod u+x " + str(shapeit))
+        answer = input("Do you want to use 1000 Genome Phase3 or Phase1? Please answer Phase3 or Phase1: ")
+        if answer == "Phase1":
+                # alignment of the SNPs between the target set and reference set
+                aligncmd1 = "for chr in `seq 1 22`; do "
+                aligncmd2 = str(shapeit) + " -check -B " + str(output) + "cleantotaldata_extractqc.chr${chr} -M " + str(reference) + str(refdir) + "genetic_map_chr${chr}_combined_b37.txt --input-ref "
+                aligncmd3 = str(reference) + str(refdir) + "ALL_1000G_phase1integrated_v3_chr${chr}_impute.hap.gz " + str(reference) + str(refdir) + "ALL_1000G_phase1integrated_v3_chr${chr}_impute.legend.gz "
+                aligncmd4 = str(reference) + str(refdir) + "ALL_1000G_phase1integrated_v3.sample --output-log " + str(output) + "chr${chr}.alignment;done"
+                align = aligncmd1 + aligncmd2 + aligncmd3 + aligncmd4
+                os.system(align)
+        else:
+                # alignment of the SNPs between the target set and reference set
+                aligncmd1 = "for chr in `seq 1 22`; do "
+                aligncmd2 = str(shapeit) + " -check -B " + str(output) + "cleantotaldata_extractqc.chr${chr} -M " + str(reference) + "1000GP_Phase3/genetic_map_chr${chr}_combined_b37.txt --input-ref "
+                aligncmd3 = str(reference) + "1000GP_Phase3/1000GP_Phase3_chr${chr}.hap.gz " + str(reference) + str(refdir) + "1000GP_Phase3/1000GP_Phase3_chr${chr}.legend.gz "
+                aligncmd4 = str(reference) + str(refdir) + "1000GP_Phase3.sample --output-log " + str(output) + "chr${chr}.alignment;done"
+                align = aligncmd1 + aligncmd2 + aligncmd3 + aligncmd4
+                os.system(align)
 
 
-def shapeit():
+def doshapeit():
     account = input("Please input the account: ")
     mail = input("Please input the mail: ")
     cpus = input("Please input cpus: ")
@@ -74,21 +86,22 @@ def shapeit():
         dir = str(inputfile)
         filename = "SHAPEIT_TASK_%s.slurm" % chr
         filename = "%s%s" % (dir, filename)
-        shapeit = open(filename, "w")
-        shapeit.write("#!/bin/bash\n")
+        shapeitfile = open(filename, "w")
+        shapeitfile.write("#!/bin/bash\n")
         shapeitlist1 = ["#SBATCH --account=%s\n" % (account), "#SBATCH --mail-user=%s\n" % mail, "#SBATCH --mail-type=ALL\n", "#SBATCH --ntasks=1\n", "#SBATCH --cpus-per-task=%s\n" % cpus, "#SBATCH --time=%s\n" % time]
         shapeitlist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=shapeitjob_%s.out\n" % chr]
-        shapeit.writelines(shapeitlist1)
-        shapeit.writelines(shapeitlist2)
+        shapeitfile.writelines(shapeitlist1)
+        shapeitfile.writelines(shapeitlist2)
         phasedfile = "cleantotaldata_extractqc.chr%s" % chr
-        shapeitlist3 = ["shapeit --force --input-bed %s%s.bed" % (output, phasedfile), " %s%s.bim" % (output, phasedfile), " %s%s.fam" % (output, phasedfile), " --input-map", " %s%sgenetic_map_chr%s_combined_b37.txt" % (reference, refdir, chr)]
+        shapeitlist3 = [str(shapeit), " --force --input-bed %s%s.bed" % (output, phasedfile), " %s%s.bim" % (output, phasedfile), " %s%s.fam" % (output, phasedfile), " --input-map", " %s%sgenetic_map_chr%s_combined_b37.txt" % (reference, refdir, chr)]
         shapeitlist4 = [" --exclude-snp", " %schr%s.alignment.snp.strand.exclude" % (output, chr), " --output-max", " %sshapeit%s.phased" % (resultdir, phasedfile), " --thread 12 --output-log %sshapeit%s.phased" % (resultdir, phasedfile)]
-        shapeit.writelines(shapeitlist3)
-        shapeit.writelines(shapeitlist4)
-        shapeit.close()
+        shapeitfile.writelines(shapeitlist3)
+        shapeitfile.writelines(shapeitlist4)
+        shapeitfile.close()
 
 
 def imputation():
+    os.system("Rscript " + str(rscript) + "splitchr.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
     for chr in range(1, 23):
         os.system("mkdir %simpute2/chr%s" % (resultdir, chr))
     # os.system("module load GCC/5.4.0-2.26  OpenMPI/1.10.3 R")
@@ -113,12 +126,15 @@ def imputation():
         impute.close()
     
 
-# refdat()
+refdat()
 preimpute()
-# preshapeit()
-# shapeit()
-# imputation()
-    
+preshapeit()
+doshapeit()
+for chr in range(1, 23):
+        os.system("sbatch " + str(inputfile) + "SHAPEIT_TASK_%s.slurm" % chr)
+imputation()
+for chr in range(1, 23):
+        os.system("sbatch " + str(inputfile) + "IMPUTE_TASK_%s.slurm" % chr)
 
 
 
