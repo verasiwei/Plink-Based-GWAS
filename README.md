@@ -42,7 +42,9 @@ during this process, just answer the "Phase1" or "Phase3" when the question prom
 
   **python post_imputation.py**
 
- 
+Notice:
+
+1.You should change the column of phenotype in the .fam file and provide a file of "mycovpca.txt" which includes the adjusted covariates like age, sex and PCs by yourself. 
 
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)
