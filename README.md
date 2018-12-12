@@ -28,14 +28,13 @@ Notice:
 
 2.Answer each question on the screen during the process, do not need to include quotation markers
 
-* 3.run imputation.py
-* 4.run post_imputation.py, a manhattan plot and a qqplot shown like the below will be created. 
+* 4.run imputation.py
+* 5.run post_imputation.py, a manhattan plot and a qqplot shown like the below will be created. 
 
 Notice: it may takes a long time if you want to impute the whole chromosomes, all chromosomes are separated into more than 500 chunks totally with each chunk 5MB according to the physical position, also you need to have enough storage to save the outputs!!!
 
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)
-
 
 
 
