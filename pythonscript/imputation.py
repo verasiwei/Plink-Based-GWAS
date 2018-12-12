@@ -10,37 +10,46 @@ resultdir = config.get_resultdir()
 inputfile = config.get_inputfile()
 plink = config.get_plink()
 rscript = config.get_rscript()
-reference = config.get_refdir()
+reference = config.get_reference()
 output = config.get_output()
 refdir = config.get_refdir()
 impute2 = config.get_impute2()
 
-# download the reference dataset of 1000 Genome
-os.system("wget https://mathgen.stats.ox.ac.uk/impute/ALL_1000G_phase1integrated_v3_impute.tgz")
-os.system("tar xzvf ALL_1000G_phase1integrated_v3_impute.tgz --directory " + str(reference))
+os.system("module load GCC/6.4.0-2.28  OpenMPI/2.1.1 R/3.4.3")
+os.system("module load GCC/6.4.0-2.28 Python/3.6.3")
+os.system("R --version")
+os.system("python --version")
 
-os.system("wget https://mathgen.stats.ox.ac.uk/impute/ALL_1000G_phase1integrated_v3_annotated_legends.tgz")
-os.system("tar xzvf ALL_1000G_phase1integrated_v3_annotated_legends.tgz --directory " + str(reference))
+# download the reference dataset of 1000 Genome
+
+
+def refdat():
+        # Phase 1
+        os.system("wget https://mathgen.stats.ox.ac.uk/impute/ALL_1000G_phase1integrated_v3_impute.tgz")
+        os.system("tar xzvf ALL_1000G_phase1integrated_v3_impute.tgz --directory " + str(reference))
+        os.system("wget https://mathgen.stats.ox.ac.uk/impute/ALL_1000G_phase1integrated_v3_annotated_legends.tgz")
+        os.system("tar xzvf ALL_1000G_phase1integrated_v3_annotated_legends.tgz --directory " + str(reference))
+        # Phase 3
+        os.system("wget https://mathgen.stats.ox.ac.uk/impute/1000GP_Phase3.tgz")
+        os.system("tar xzvf 1000GP_Phase3.tgz --directory " + str(reference))
 
 
 def preimpute():
-    # create a file with all the SNP names that are in the reference set
-    subprocess.call((
-        "for i in `seq 1 22`; do",
-        "gunzip -c ",
-        str(reference),
-        "ALL_1000G_phase1integrated_v3_annotated_legends/ALL_1000G_phase1integrated_v3_chr${i}_impute.legend.gz | ",
-        "gawk -v chr=${i} '$5=='SNP' {print chr" "$2}' >> ",
-        str(inputfile),
-        "snpsref.txt; done"))
-
-    # get a list of positions of SNPs that are in the target set
-    os.system("gawk '{print $1" "$4}' " + str(inputfile) + "totaldata_extractqc.bim > " + str(input) + "snpsraw.txt")
-    # get SNPs that are in both the target set and reference set, to make the format corresponding to the --extract range option in plink
-    os.system("module load GCC/5.4.0-2.26  OpenMPI/1.10.3 R")
-    os.system("Rscript " + str(rscript) + "snpref_raw.R" + str(inputfile))
-    # since some SNPs in target set but not in reference set,SNPs that are in both the target set and reference set need to be extracted from the target set, according to the physical position, not the SNP name
-    os.system("plink --noweb --bfile " + str(inputfile) + "totaldata_extractqc --extract range " + str(inputfile) + "duplicatesnp --make-bed --out " + str(inputfile) + "cleantotaldata_extractqc")
+        answer = input("Do you want to use 1000 Genome Phase3 or Phase1? Please answer Phase3 or Phase1: ")
+        if answer == "Phase1":
+                # create a file with all the SNP names that are in the reference set
+                SNP = "SNP"
+                os.system("for i in `seq 1 22`; do " + "gunzip -c " + str(reference) + "ALL_1000G_phase1integrated_v3_annotated_legends/ALL_1000G_phase1integrated_v3_chr${i}_impute.legend.gz | " + "gawk -v chr=${i} '$5==\"" + str(SNP) + "\" " + "{print chr\"" + " \"$2}' >> " + str(inputfile) + "snpsref.txt; done")
+        else:
+                # create a file with all the SNP names that are in the reference set
+                SNP = "Biallelic_SNP"
+                os.system("for i in `seq 1 22`; do " + "gunzip -c " + str(reference) + "1000GP_Phase3/1000GP_Phase3_chr${i}.legend.gz | " + "gawk -v chr=${i} '$5==\"" + str(SNP) + "\" " + "{print chr\"" + " \"$2}' >> " + str(inputfile) + "snpsref.txt; done")
+        # get a list of positions of SNPs that are in the target set
+        os.system("gawk '{print $1\"" + " \"$4}' " + str(inputfile) + "totaldata_extractqc.bim > " + str(inputfile) + "snpsraw.txt")
+        # get SNPs that are in both the target set and reference set, to make the format corresponding to the --extract range option in plink
+        os.system("Rscript " + str(rscript) + "snpref_raw.R " + str(inputfile))
+        # since some SNPs in target set but not in reference set,SNPs that are in both the target set and reference set need to be extracted from the target set, according to the physical position, not the SNP name
+        os.system(str(plink) + " --noweb --bfile " + str(inputfile) + "totaldata_extractqc --extract range " + str(inputfile) + "duplicatesnp --make-bed --out " + str(inputfile) + "cleantotaldata_extractqc")
 
 
 def preshapeit():
@@ -104,10 +113,11 @@ def imputation():
         impute.close()
     
 
+# refdat()
 preimpute()
-preshapeit()
-shapeit()
-imputation()
+# preshapeit()
+# shapeit()
+# imputation()
     
 
 

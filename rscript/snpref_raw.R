@@ -2,7 +2,7 @@
 args=commandArgs(TRUE)
 options(scipen=999)
 input=args[1]
-snpsreference=read.table(paste(input,"snpsreference.txt",sep = ""),header=F,as.is=T)
+snpsreference=read.table(paste(input,"snpsref.txt",sep = ""),header=F,as.is=T)
 snpsraw=read.table(paste(input,"snpsraw.txt",sep = ""),header=F,as.is=T)
 snpsraw=snpsraw[order(snpsraw[,1],snpsraw[,2]),]
 snpsreference=snpsreference[order(snpsreference[,1],snpsreference[,2]),]

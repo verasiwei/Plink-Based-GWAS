@@ -5,25 +5,25 @@
 
 class global_var:
     # directory
-    rawdatadir = ""
-    resultdir = ""
-    inputfile = ""
-    output = ""
-    rscript = ""
-    reference = ""
-    refdir = ""
-    shellscript = ""
-    shapeit = ""
-    plink = ""
-    impute2 = ""
+    rawdatadir = ""   # full path of where your raw data is, end in /
+    resultdir = ""    # full path of where you save the final results, end in /
+    inputfile = ""    # full path of where you save files created during analysis process, end in /
+    output = ""       # full path of where you save files needed for shapeit to do pre-phasing,end in /
+    rscript = ""      # full path of where you save the r scripts, end in /
+    reference = ""    # full path of where you save the reference panel, end in /
+    refdir = ""       # the name of folder for reference panel which you download, end in /
+    pythonscript = ""  # full path of where you save the python scripts, end in /
+    shapeit = ""      # full path of where the shapeit tool is
+    plink = ""        # full path of where the plink tool is
+    impute2 = ""      # full path of where the impute2 tool is
     # parameters
-    SNPcallrate = 0.02
-    maf = 0.01
-    hwe = '%f' % 0.000001
-    mind = 0.05
+    SNPcallrate = 0.02  # missing rate of SNP,filter out SNPs with missingness>SNPcallrate
+    maf = 0.01          # include SNPs with Minor Allele Frequency>maf
+    hwe = '%f' % 0.000001  # exclude SNPs with Hardy Weinberg Equilibrium p value<hwe
+    mind = 0.05         # missing rate of individuals,exclude individuals with missingness>mind
     LDprune1 = 50   # LDprune1 is the window size in SNPs
     LDprune2 = 5   # LDprune2 is the number of SNPs to shift the window at each step
-    LDprune3 = 0.2    # LDprune3 is the multiple correlation coefficient
+    LDprune3 = 0.2    # LDprune3 is the r^2
     pca = 10  # number of parameters to output
     MINIBD = 0.05  # to reduce the file size, output to file.genome pairs where PI_HAT is greater than MINIBD
 
@@ -84,12 +84,12 @@ def get_refdir():
     return global_var.refdir
 
 
-def set_shellscript(shellscript):
-    global_var.shellscript = shellscript
+def set_pythonscript(pythonscript):
+    global_var.pythonscript = pythonscript
 
 
-def get_shellscript():
-    return global_var.shellscript
+def get_pythonscript():
+    return global_var.pythonscript
 
 
 def set_shapeit(shapeit):

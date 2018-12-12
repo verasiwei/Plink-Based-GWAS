@@ -10,16 +10,24 @@ other pre-requirements:
 * a cluster or you need a server with many cores
 * genotyped data(plink format, transform to bed/bim/fam before running the pipeline if your genotyped data is ped/map)
 * enough storage since very large files will be created during imputation procedure
-* R gawk python3.7
+* R 3.4.3;gawk;python3.6.3
 
 ## Procedures
 
 
+* 1.**git clone https://github.com/verasiwei/GWAS_python**
+* 2.users to edit the directory in config.py
+* 3.On your terminal, cd to the folder "pythonscript"
 
-* 1.users to edit the directory in config.py
-* 2.run quality_control.py
+**python quality_control.py**
 
-Notice: If IDs are not matched in genotype and phenotype data,you should provide "mylist.txt" file.
+
+Notice: 
+
+1.If IDs are not matched in genotype and phenotype data,you should provide "mylist.txt" file.
+
+2.Answer each question on the screen during the process, do not need to include quotation markers
+
 * 3.run imputation.py
 * 4.run post_imputation.py, a manhattan plot and a qqplot shown like the below will be created. 
 
