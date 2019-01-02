@@ -13,6 +13,7 @@ reference = config.get_refdir()
 output = config.get_output()
 refdir = config.get_refdir()
 impute2 = config.get_impute2()
+annotation = config.get_annotation()
 SNPcallrate = config.get_SNPcallrate()
 maf = config.get_maf()
 hwe = config.get_hwe()
@@ -112,12 +113,37 @@ def unilog():
     os.system("Rscript %sunilogassoc.R %s" % (rscript, resultdir))
 
 
+def annotation():
+    # unzip the annovar tool that downloaded in the folder annotation
+    os.system("tar xzvf %sannovar.latest.tar.gz --directory %s" % (annotation, annotation))
+    # download the reference database
+    os.system("perl %sannovar/annotate_variation.pl -buildver hg19 -downdb -webfrom annovar refGene %s" % (annotation, annotation))
+    annotationtype = input("Please input your type of annotation. Please answer vcf or avinput: ")
+    if annotationtype == "vcf":
+        # first choice, annotation in one step using vcf file
+        # prepare the data that the format satisfies the ANNOVAR requirements
+        # extract significant snps from the results
+        os.system("gawk '$2!=\"" + "SNP" + "\" " + "{print $2}' %sunilog_covs > %smysnps.txt" % (resultdir, annotation))
+        os.system("%s --bfile %simpute2/cleanchr_qc --extract %smysnps.txt --make-bed --out %ssigsnps" % (plink, resultdir, annotation, annotation))
+        # notice the major allele in plink format file is not always the reference allele, we need to change the column of major and minor allele colomuns before converting to vcf
+        os.system("Rscript %sannotation.R %ssigsnps.bim")
+        # convert to vcf format
+        os.system("%s --bfile %ssigsnps --recode vcf --out %ssigsnpsvcf" % (plink, annotation, annotation))
+        # annotation in one step using vcf file
+        os.system("%sannovar/table_annovar.pl %ssigsnpsvcf.vcf %s -buildver hg19 -out %ssigannotation -remove -protocol refGene -operation g -nastring . -vcfinput")
+    else:
+        # second choice, annotation in one step using .avinput file
+        os.system("Rscript %sannotation.R %ssigsnps.bim")
+        os.system("perl %sannovar/annotate_variation.pl --geneanno -dbtype refGene -out %ssigannotation_gene -build hg19 %ssigsnps.avinput %s" % (annotation, annotation, annotation, annotation))
+
+
 postimputation()
 for chr in range(1, 23):
         os.system("sbatch " + str(inputfile) + "combinechr_TASK_%s.slurm" % chr)
 for chr in range(1, 23):
         os.system("sbatch " + str(inputfile) + "chrplink_TASK_%s.slurm" % chr)
 postimputation2()
+annotation()
 
 
 

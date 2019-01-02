@@ -16,6 +16,7 @@ class global_var:
     shapeit = ""      # full path of where the shapeit tool is
     plink = ""        # full path of where the plink tool is
     impute2 = ""      # full path of where the impute2 tool is
+    annotation = ""   # full path of where the annotation is
     # parameters
     SNPcallrate = 0.02  # missing rate of SNP,filter out SNPs with missingness>SNPcallrate
     maf = 0.01          # include SNPs with Minor Allele Frequency>maf
@@ -114,6 +115,14 @@ def set_plink(plink):
 
 def get_plink():
     return global_var.plink
+
+
+def set_annotation(annotation):
+    global_var.annotation = annotation
+
+
+def get_annotation():
+    return global_var.annotation
 
 
 def set_SNPcallrate(SNPcallrate):
