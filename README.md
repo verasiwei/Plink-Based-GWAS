@@ -57,8 +57,11 @@ Notice:
 
 1.You should change the column of phenotype in the .fam file and provide a file of "mycovpca.txt" which includes the adjusted covariates like age, sex and PCs by yourself. 
 
+After running post_imputation.py, answer every question on the screen and you will get a manhattan plot and an annotation file which annotates the significant snps
+
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
-![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)
+![](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png =700*500)
+![](https://github.com/verasiwei/GWAS_python/blob/master/result/annotation.png =700*500)
 
 
 

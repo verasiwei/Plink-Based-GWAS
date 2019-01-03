@@ -134,7 +134,7 @@ def annotation():
     else:
         # second choice, annotation in one step using .avinput file
         os.system("Rscript %sannotation.R %ssigsnps.bim")
-        os.system("perl %sannovar/annotate_variation.pl --geneanno -dbtype refGene -out %ssigannotation_gene -build hg19 %ssigsnps.avinput %s" % (annotation, annotation, annotation, annotation))
+        os.system("perl %sannovar/table_annovar.pl %ssigsnps.avinput %s -buildver hg19 -out %ssigannotation -remove -protocol refGene -operation gx -nastring . -csvout -polish -xref %sannovar/example/gene_xref.txt" % (annotation, annotation, annotation, annotation, annotation))
 
 
 postimputation()
