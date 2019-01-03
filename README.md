@@ -60,8 +60,8 @@ Notice:
 After running post_imputation.py, answer every question on the screen and you will get a manhattan plot and an annotation file which annotates the significant snps
 
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
-![](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png =700*500)
-![](https://github.com/verasiwei/GWAS_python/blob/master/result/annotation.png =700*500)
+![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)
+![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/annotation.png)
 
 
 
