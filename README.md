@@ -60,10 +60,9 @@ Notice:
 After running post_imputation.py, answer every question on the screen and you will get a manhattan plot and an annotation file which annotates the significant snps
 
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
-![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)
-![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/annotation.png)
-
-
+Solarized Ocean             |  Solarized Ocean
+:-------------------------:|:-------------------------:
+![](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png)  |  ![](https://github.com/verasiwei/GWAS_python/blob/master/result/annotation.png)
 
 
 
