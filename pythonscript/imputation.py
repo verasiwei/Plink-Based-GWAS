@@ -101,9 +101,13 @@ def doshapeit():
 
 
 def imputation():
-    os.system("Rscript " + str(rscript) + "splitchr.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
+    largesample = input("Please input whether the number of samples is very large (Please answer yes or no): ")
+    if largesample == "no":
+            os.system("Rscript " + str(rscript) + "splitchr.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
+    else:
+            os.system("Rscript " + str(rscript) + "splitchrlarge.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
     for chr in range(1, 23):
-        os.system("mkdir %simpute2/chr%s" % (resultdir, chr))
+            os.system("mkdir %simpute2/chr%s" % (resultdir, chr))
     # os.system("module load GCC/5.4.0-2.26  OpenMPI/1.10.3 R")
     # os.system("Rscript %ssplit.R %s %s %s %s %s" % (rscript, inputfile, resultdir, impute2, reference, refdir))
     account = input("Please input the account: ")
@@ -112,19 +116,19 @@ def imputation():
     time = input("Please input time: ")
     memory = input("Please input memory: ")
     for chr in range(1, 23):
-        dir = str(inputfile)
-        filename = "IMPUTE_TASK_%s.slurm" % chr
-        filename = "%s%s" % (dir, filename)
-        impute = open(filename, "w")
-        impute.write("#!/bin/bash\n")  
-        imputelist1 = ["#SBATCH --account=%s\n" % (account), "#SBATCH --mail-user=%s\n" % mail, "#SBATCH --mail-type=ALL\n", "#SBATCH --ntasks=1\n", "#SBATCH --cpus-per-task=%s\n" % cpus, "#SBATCH --time=%s\n" % time]
-        imputelist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]  
-        imputelist3 = ["cat %simpute2/chr%s_task | parallel" % (resultdir, chr)]
-        impute.writelines(imputelist1)
-        impute.writelines(imputelist2)
-        impute.writelines(imputelist3)
-        impute.close()
-    
+            dir = str(inputfile)
+            filename = "IMPUTE_TASK_%s.slurm" % chr
+            filename = "%s%s" % (dir, filename)
+            impute = open(filename, "w")
+            impute.write("#!/bin/bash\n")  
+            imputelist1 = ["#SBATCH --account=%s\n" % (account), "#SBATCH --mail-user=%s\n" % mail, "#SBATCH --mail-type=ALL\n", "#SBATCH --ntasks=1\n", "#SBATCH --cpus-per-task=%s\n" % cpus, "#SBATCH --time=%s\n" % time]
+            imputelist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]  
+            imputelist3 = ["cat %simpute2/chr%s_task | parallel" % (resultdir, chr)]
+            impute.writelines(imputelist1)
+            impute.writelines(imputelist2)
+            impute.writelines(imputelist3)
+            impute.close()
+
 
 refdat()
 preimpute()

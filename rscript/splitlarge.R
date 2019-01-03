@@ -1,0 +1,47 @@
+#if do it on accre cluster
+args=commandArgs(TRUE)
+input=args[1]
+resultdir=args[2]
+impute2=args[3]
+reference=args[4]
+refdir=args[5]
+options(scipen = 999)
+for (chr in 1:22) {
+  phasedfile=paste("cleantotaldata_extractqc.chr",chr,".phased",sep = "")
+  system(paste("gawk '{print $3}' ",resultdir,"shapeit/",phasedfile,".haps > ",input,"positions",sep = ""))
+  positions=read.table(paste(input,"positions",sep = ""),header = FALSE)
+  maxposition=as.integer(positions[nrow(positions),]/5000000)+1
+  start=0
+  if (maxposition<=5){ 
+  for (chunk in 1:maxposition) {
+    endchr=start+5000000
+    startchr=start+1
+    system(paste("echo ",impute2," -use_prephased_g -known_haps_g ",resultdir,"shapeit/",phasedfile,".haps -m ",reference,refdir,"genetic_map_chr",chr,"_combined_b37.txt -h ",reference,refdir,"ALL_1000G_phase1integrated_v3_chr",chr,"_impute.hap.gz -l ",reference,refdir,"ALL_1000G_phase1integrated_v3_chr",chr,"_impute.legend.gz -int ",startchr," ",endchr," -Ne 20000 -buffer 400 -o ",resultdir,"impute2/chr",chr,"/",phasedfile,".chunk",chunk,".impute2 >> ",resultdir,"impute2/chr",chr,"_task_1",sep=""))
+    start=endchr
+  }
+}
+  else{
+   maxposition_2=as.integer(maxposition/5)+1
+   i=1
+   j=1
+   initial=5
+   while(i <= maxposition_2)
+   { if(initial<=maxposition){
+     for (chunk in j:initial) {
+    endchr=start+5000000
+    startchr=start+1
+    system(paste("echo ",impute2," -use_prephased_g -known_haps_g ",resultdir,"shapeit/",phasedfile,".haps -m ",reference,refdir,"genetic_map_chr",chr,"_combined_b37.txt -h ",reference,refdir,"ALL_1000G_phase1integrated_v3_chr",chr,"_impute.hap.gz -l ",reference,refdir,"ALL_1000G_phase1integrated_v3_chr",chr,"_impute.legend.gz -int ",startchr," ",endchr," -Ne 20000 -buffer 400 -o ",resultdir,"impute2/chr",chr,"/",phasedfile,".chunk",chunk,".impute2 >> ",resultdir,"impute2/chr",chr,"_task_",i,sep=""))
+    start=endchr
+  }}
+    else {for (chunk in j:maxposition) {
+    endchr=start+5000000
+    startchr=start+1
+    system(paste("echo ",impute2," -use_prephased_g -known_haps_g ",resultdir,"shapeit/",phasedfile,".haps -m ",reference,refdir,"genetic_map_chr",chr,"_combined_b37.txt -h ",reference,refdir,"ALL_1000G_phase1integrated_v3_chr",chr,"_impute.hap.gz -l ",reference,refdir,"ALL_1000G_phase1integrated_v3_chr",chr,"_impute.legend.gz -int ",startchr," ",endchr," -Ne 20000 -buffer 400 -o ",resultdir,"impute2/chr",chr,"/",phasedfile,".chunk",chunk,".impute2 >> ",resultdir,"impute2/chr",chr,"_task_",i,sep=""))
+    start=endchr
+  }}
+  i=i+1
+  j=j+5
+  initial=initial+5
+   }
+}
+}
