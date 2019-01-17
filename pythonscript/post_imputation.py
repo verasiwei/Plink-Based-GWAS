@@ -34,7 +34,7 @@ def postimputation():
     memory = input("Please input memory: ")
     for chr in range(1, 23):
         print(chr)
-        phasedfile = "cleantotaldata_extractqc.chr%s.phased" % (chr)
+        phasedfile = "shapeitcleantotaldata_extractqc.chr%s.phased" % (chr)
         dir = str(inputfile)
         filename = "combinechr_TASK_%s.slurm" % chr
         filename = "%s%s" % (dir, filename)
@@ -137,13 +137,14 @@ def annotation():
         os.system("perl %sannovar/table_annovar.pl %ssigsnps.avinput %s -buildver hg19 -out %ssigannotation -remove -protocol refGene -operation gx -nastring . -csvout -polish -xref %sannovar/example/gene_xref.txt" % (annotation, annotation, annotation, annotation, annotation))
 
 
-postimputation()
-for chr in range(1, 23):
-        os.system("sbatch " + str(inputfile) + "combinechr_TASK_%s.slurm" % chr)
-for chr in range(1, 23):
-        os.system("sbatch " + str(inputfile) + "chrplink_TASK_%s.slurm" % chr)
-postimputation2()
-annotation()
+# postimputation()
+# for chr in range(1, 23):
+#        os.system("sbatch " + str(inputfile) + "combinechr_TASK_%s.slurm" % chr)
+# for chr in range(1, 23):
+#        os.system("sbatch " + str(inputfile) + "chrplink_TASK_%s.slurm" % chr)
+# postimputation2()
+unilog()
+# annotation()
 
 
 

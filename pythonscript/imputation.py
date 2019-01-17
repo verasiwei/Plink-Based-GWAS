@@ -94,7 +94,7 @@ def doshapeit():
         shapeitfile.writelines(shapeitlist2)
         phasedfile = "cleantotaldata_extractqc.chr%s" % chr
         shapeitlist3 = [str(shapeit), " --force --input-bed %s%s.bed" % (output, phasedfile), " %s%s.bim" % (output, phasedfile), " %s%s.fam" % (output, phasedfile), " --input-map", " %s%sgenetic_map_chr%s_combined_b37.txt" % (reference, refdir, chr)]
-        shapeitlist4 = [" --exclude-snp", " %schr%s.alignment.snp.strand.exclude" % (output, chr), " --output-max", " %sshapeit%s.phased" % (resultdir, phasedfile), " --thread 12 --output-log %sshapeit%s.phased" % (resultdir, phasedfile)]
+        shapeitlist4 = [" --exclude-snp", " %schr%s.alignment.snp.strand.exclude" % (output, chr), " --output-max", " %sshapeit/%s.phased" % (resultdir, phasedfile), " --thread 12 --output-log %sshapeit%s.phased" % (resultdir, phasedfile)]
         shapeitfile.writelines(shapeitlist3)
         shapeitfile.writelines(shapeitlist4)
         shapeitfile.close()
@@ -104,31 +104,50 @@ def imputation():
     largesample = input("Please input whether the number of samples is very large (Please answer yes or no): ")
     if largesample == "no":
             os.system("Rscript " + str(rscript) + "splitchr.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
+            account = input("Please input the account: ")
+            mail = input("Please input the mail: ")
+            cpus = input("Please input cpus: ")
+            time = input("Please input time: ")
+            memory = input("Please input memory: ")
+            for chr in range(1, 23):
+                dir = str(inputfile)
+                filename = "IMPUTE_TASK_%s.slurm" % chr
+                filename = "%s%s" % (dir, filename)
+                impute = open(filename, "w")
+                impute.write("#!/bin/bash\n")  
+                imputelist1 = ["#SBATCH --account=%s\n" % (account), "#SBATCH --mail-user=%s\n" % mail, "#SBATCH --mail-type=ALL\n", "#SBATCH --ntasks=1\n", "#SBATCH --cpus-per-task=%s\n" % cpus, "#SBATCH --time=%s\n" % time]
+                imputelist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]  
+                imputelist3 = ["cat %simpute2/chr%s_task | parallel" % (resultdir, chr)]
+                impute.writelines(imputelist1)
+                impute.writelines(imputelist2)
+                impute.writelines(imputelist3)
+                impute.close()
     else:
-            os.system("Rscript " + str(rscript) + "splitchrlarge.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
+            os.system("Rscript " + str(rscript) + "splitlarge.R " + str(inputfile) + " " + str(resultdir) + " " + str(impute2) + " " + str(reference) + " " + str(refdir))
+            account = input("Please input the account: ")
+            mail = input("Please input the mail: ")
+            cpus = input("Please input cpus: ")
+            time = input("Please input time: ")
+            memory = input("Please input memory: ")
+            for chr in range(1, 23):
+                    for i in range(1, 12):
+                            dir = str(inputfile)
+                            filename = "IMPUTE_TASK_%s_%s.slurm" % (chr, i)
+                            filename = "%s%s" % (dir, filename)
+                            impute = open(filename, "w")
+                            impute.write("#!/bin/bash\n") 
+                            imputelist1 = ["#SBATCH --account=%s\n" % (account), "#SBATCH --mail-user=%s\n" % mail, "#SBATCH --mail-type=ALL\n", "#SBATCH --ntasks=1\n", "#SBATCH --cpus-per-task=%s\n" % cpus, "#SBATCH --time=%s\n" % time]
+                            imputelist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s_%i.out\n" % chr]
+                            imputelist3 = ["cat %simpute2/chr%s_task_%s | parallel" % (resultdir, chr, i)]
+                            impute.writelines(imputelist1)
+                            impute.writelines(imputelist2)
+                            impute.writelines(imputelist3)
+                            impute.close()
     for chr in range(1, 23):
             os.system("mkdir %simpute2/chr%s" % (resultdir, chr))
     # os.system("module load GCC/5.4.0-2.26  OpenMPI/1.10.3 R")
     # os.system("Rscript %ssplit.R %s %s %s %s %s" % (rscript, inputfile, resultdir, impute2, reference, refdir))
-    account = input("Please input the account: ")
-    mail = input("Please input the mail: ")
-    cpus = input("Please input cpus: ")
-    time = input("Please input time: ")
-    memory = input("Please input memory: ")
-    for chr in range(1, 23):
-            dir = str(inputfile)
-            filename = "IMPUTE_TASK_%s.slurm" % chr
-            filename = "%s%s" % (dir, filename)
-            impute = open(filename, "w")
-            impute.write("#!/bin/bash\n")  
-            imputelist1 = ["#SBATCH --account=%s\n" % (account), "#SBATCH --mail-user=%s\n" % mail, "#SBATCH --mail-type=ALL\n", "#SBATCH --ntasks=1\n", "#SBATCH --cpus-per-task=%s\n" % cpus, "#SBATCH --time=%s\n" % time]
-            imputelist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]  
-            imputelist3 = ["cat %simpute2/chr%s_task | parallel" % (resultdir, chr)]
-            impute.writelines(imputelist1)
-            impute.writelines(imputelist2)
-            impute.writelines(imputelist3)
-            impute.close()
-
+    
 
 refdat()
 preimpute()
