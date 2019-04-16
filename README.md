@@ -59,6 +59,8 @@ Notice:
 
 After running post_imputation.py, answer every question on the screen and you will get a manhattan plot and an annotation file which annotates the significant snps
 
+You can comment or uncomment each function when you only want to do specific jobs like generating prs score or something else.
+
 ![Alt text](https://github.com/verasiwei/GWAS_python/blob/master/result/manhattan_jak2_4covs.png)
 ![alt-text-1](https://github.com/verasiwei/GWAS_python/blob/master/result/qqplot_jak2.png) ![alt-text-2](https://github.com/verasiwei/GWAS_python/blob/master/result/annotation.png)
 

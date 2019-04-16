@@ -64,7 +64,7 @@ def postimputation():
         chrplinklist2 = ["#SBATCH --mem=%s\n" % memory, "#SBATCH --output=imputejob_%s.out\n" % chr]
         chrplink.writelines(chrplinklist1)
         chrplink.writelines(chrplinklist2)
-        chrplinklist3 = [str(plink), " --data -gen %simpute2/chr%s_chunkall.gen " % (resultdir, chr),  "--sample %sshapeit/cleantotaldata_extractqc.chr%s.phased.sample " % (resultdir, chr), "--hard-call-threshold 0.2 --oxford-single-chr %s " % (chr)]
+        chrplinklist3 = [str(plink), " --data -gen %simpute2/chr%s_chunkall.gen " % (resultdir, chr),  "--sample %sshapeit/shapeitcleantotaldata_extractqc.chr%s.phased.sample " % (resultdir, chr), "--hard-call-threshold 0.2 --oxford-single-chr %s " % (chr)]
         chrplinklist4 = ["--make-bed --out %simpute2/chr%s_chunkall" % (resultdir, chr)]
         chrplink.writelines(chrplinklist3)
         chrplink.writelines(chrplinklist4)
@@ -81,7 +81,7 @@ def postimputation():
     os.system(str(plink) + " --bfile %simpute2/chr1_chunkall --merge-list %scombinechrplink.txt --make-bed --out %simpute2/allchr" % (resultdir, inputfile, resultdir))
 
     # remove SNPs with 3+ alleles, detect which chromosome these SNPs on
-    os.system("%s --bfile %simpute2/chr17_chunkall --exclude %simpute2/allchr-merge.missnp --make-bed --out %simpute2/allchr" % (plink, resultdir, inputfile, resultdir))
+    os.system("%s --bfile %simpute2/chr17_chunkall --exclude %simpute2/allchr-merge.missnp --make-bed --out %simpute2/chr17_chunkall" % (plink, resultdir, inputfile, resultdir))
     os.system("%s --bfile %simpute2/chr1_chunkall --merge-list %scombinechrplink.txt --make-bed --out %simpute2/allchr" % (plink, resultdir, inputfile, resultdir))
 
 
@@ -111,6 +111,14 @@ def unilog():
     os.system("gawk '$12!=\"" + "NA" + "\" " + "&& $12<=0.000005 || NR==1 {print}' %sunilogassoc.assoc.logistic > %sunilog_covs" % (resultdir, resultdir))
     # manhattan plot and significant snps csv file
     os.system("Rscript %sunilogassoc.R %s" % (rscript, resultdir))
+
+
+def prs():
+    # this is used to generate prs score
+    # R script is used to get the log of odds ratio for each SNP
+    os.system("Rscript %sprs.R %sunilog_covs.csv" % (rscript, resultdir))
+    # this is used to generate prs score file
+    os.system("%s --bfile %simpute2/cleanchr_qc --noweb --score %ssnpprs_logOR.raw --out %ssnpprs_logOR" % (plink, resultdir, inputfile, resultdir))
 
 
 def annotation():
@@ -143,7 +151,8 @@ def annotation():
 # for chr in range(1, 23):
 #        os.system("sbatch " + str(inputfile) + "chrplink_TASK_%s.slurm" % chr)
 # postimputation2()
-unilog()
+# unilog()
+# prs()
 # annotation()
 
 
